@@ -56,8 +56,9 @@ public final class EPUBParser: EPUBParserProtocol {
 
             manifest = getManifest(from: contentService.manifest)
             delegate?.parser(self, didFinishParsing: manifest)
-
-            guard let toc = spine.toc, let fileName = manifest.items[toc]?.path else {
+            /// 修改以支持部分无内容
+            let toc = spine.toc ?? "toc.ncx"
+            guard let fileName = manifest.items[toc]?.path else {
                 throw EPUBParserError.tableOfContentsMissing
             }
             let tableOfContentsElement = try contentService.tableOfContents(fileName)

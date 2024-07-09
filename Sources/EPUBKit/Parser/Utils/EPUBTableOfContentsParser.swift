@@ -37,7 +37,7 @@ extension EPUBTableOfContentsParserImplementation {
         let subs: [EPUBTableOfContents] = points.map { point in
             EPUBTableOfContents(
                 label: point["navLabel"]["text"].value ?? "",
-                id: point.attributes["id"]!,
+                id: point.attributes["id"] ?? "", // 修改此处，会崩溃
                 item: point["content"].attributes["src"]!,
                 subTable: evaluateChildren(from: point)
             )
