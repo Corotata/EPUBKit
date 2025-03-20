@@ -58,9 +58,30 @@ public final class EPUBParser: EPUBParserProtocol {
             delegate?.parser(self, didFinishParsing: manifest)
             /// 修改以支持部分无内容
             let toc = spine.toc ?? "toc.ncx"
-            guard let fileName = manifest.items[toc]?.path else {
+            
+            /// 最终决定的目录名
+            var resultName: String?
+            
+            
+            var fileNames: [String] = []
+            /// 罗列可能的名称
+            fileNames.append(toc)
+            fileNames.append("_nav.xhtml")
+            fileNames.append("_toc.xhtml")
+            
+            for name in fileNames {
+                /// 确定文件存在
+                if let fileName = manifest.items[name]?.path,
+                   fileExist(fileName: fileName, contentService: contentService) {
+                    resultName = fileName
+                    break
+                }
+            }
+            
+            guard let fileName = resultName else {
                 throw EPUBParserError.tableOfContentsMissing
             }
+            
             let tableOfContentsElement = try contentService.tableOfContents(fileName)
 
             tableOfContents = getTableOfContents(from: tableOfContentsElement)
@@ -75,6 +96,17 @@ public final class EPUBParser: EPUBParserProtocol {
                             spine: spine, tableOfContents: tableOfContents)
     }
 
+    /// 检查文件是否存在
+    func fileExist(fileName: String?,contentService: EPUBContentServiceImplementation) -> Bool {
+        
+        guard let fileName = fileName else {
+            return false
+        }
+        let url =  contentService.contentDirectory.appendingPathComponent(fileName)
+        
+        return FileManager.default.fileExists(atPath: url.path)
+    }
+    
 }
 
 extension EPUBParser: EPUBParsable {
