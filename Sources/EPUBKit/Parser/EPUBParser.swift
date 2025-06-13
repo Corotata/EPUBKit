@@ -78,6 +78,10 @@ public final class EPUBParser: EPUBParserProtocol {
                 }
             }
             
+            if resultName == nil,let toc = manifest.items.filter({$0.key == "toc" || $0.value.id == "toc"}).first?.value  {
+                resultName = toc.path
+            }
+            
             guard let fileName = resultName else {
                 throw EPUBParserError.tableOfContentsMissing
             }
