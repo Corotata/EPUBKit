@@ -82,14 +82,25 @@ public final class EPUBParser: EPUBParserProtocol {
                 resultName = toc.path
             }
             
-            guard let fileName = resultName else {
-                throw EPUBParserError.tableOfContentsMissing
+            if let fileName = resultName {
+                let tableOfContentsElement = try contentService.tableOfContents(fileName)
+                tableOfContents = getTableOfContents(from: tableOfContentsElement)
+                delegate?.parser(self, didFinishParsing: tableOfContents)
+            } else {
+                // 尝试从manifest的xHTML文件构造目录
+                let xhtmlItems = manifest.itemList.filter { $0.mediaType == .xHTML }
+                
+                if !xhtmlItems.isEmpty {
+                    // 构造一个简单的目录结构
+                    tableOfContents = createTableOfContentsFromManifest(xhtmlItems: xhtmlItems)
+                    delegate?.parser(self, didFinishParsing: tableOfContents)
+                } else {
+                    throw EPUBParserError.tableOfContentsMissing
+                }
             }
             
-            let tableOfContentsElement = try contentService.tableOfContents(fileName)
-
-            tableOfContents = getTableOfContents(from: tableOfContentsElement)
-            delegate?.parser(self, didFinishParsing: tableOfContents)
+            
+          
         } catch let error {
             delegate?.parser(self, didFailParsingDocumentAt: path, with: error)
             throw error
@@ -111,6 +122,24 @@ public final class EPUBParser: EPUBParserProtocol {
         return FileManager.default.fileExists(atPath: url.path)
     }
     
+    /// 从manifest的xHTML文件构造目录
+    private func createTableOfContentsFromManifest(xhtmlItems: [EPUBManifestItem]) -> EPUBTableOfContents {
+        let subTable = xhtmlItems.enumerated().map { index, item in
+            EPUBTableOfContents(
+                label: item.id.replacingOccurrences(of: "_", with: " ").capitalized,
+                id: item.id,
+                item: item.path,
+                subTable: []
+            )
+        }
+        
+        return EPUBTableOfContents(
+            label: "Contents",
+            id: "generated-toc",
+            item: nil,
+            subTable: subTable
+        )
+    }
 }
 
 extension EPUBParser: EPUBParsable {

@@ -17,7 +17,9 @@ class EPUBManifestParserImplementation: EPUBManifestParser {
 
     func parse(_ xmlElement: AEXMLElement) -> EPUBManifest {
         var items: [String: EPUBManifestItem] = [:]
-        xmlElement["item"].all?
+        var itemList: [EPUBManifestItem] = []  // 新增数组
+        
+        let manifestItems:[EPUBManifestItem] = xmlElement["item"].all?
             .compactMap { item in
                 guard
                     let id = item.attributes["id"],
@@ -29,9 +31,18 @@ class EPUBManifestParserImplementation: EPUBManifestParser {
                 return EPUBManifestItem(
                     id: id, path: path, mediaType: mediaType ?? .unknown, property: properties
                 )
-            }
-            .forEach { items[$0.id] = $0 }
-        return EPUBManifest(id: xmlElement["id"].value, items: items)
+            } ?? []
+        
+        // 同时填充字典和数组
+        manifestItems.forEach { item in
+            items[item.id] = item
+            itemList.append(item)
+        }
+        
+        return EPUBManifest(
+            id: xmlElement["id"].value,
+            items: items,
+            itemList: itemList
+        )
     }
-
 }
