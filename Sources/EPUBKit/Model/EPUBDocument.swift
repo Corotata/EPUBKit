@@ -46,10 +46,19 @@ extension EPUBDocument {
     public var title: String? { metadata.title }
     public var author: String? { metadata.creator?.name }
     public var publisher: String? { metadata.publisher }
+    /// 封面资源 URL；优先使用旧版元数据标识，随后识别 EPUB 3 的 cover-image 属性。
     public var cover: URL? {
-        guard let coverId = metadata.coverId, let path = manifest.items[coverId]?.path else {
+        if let coverId = metadata.coverId,
+           let path = manifest.items[coverId]?.path {
+            return contentDirectory.appendingPathComponent(path)
+        }
+
+        // EPUB 3 的 properties 是空白分隔的属性列表。
+        guard let item = manifest.itemList.first(where: {
+            $0.property?.split(whereSeparator: \.isWhitespace).contains("cover-image") == true
+        }) else {
             return nil
         }
-        return contentDirectory.appendingPathComponent(path)
+        return contentDirectory.appendingPathComponent(item.path)
     }
 }

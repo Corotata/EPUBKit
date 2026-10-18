@@ -50,23 +50,13 @@ final class EPUBParserErrorTests: XCTestCase {
         }
     }
 
-    func testErrorTocWithBrokenMetamorphosis() {
+    /// 缺失目录文件时，解析器应按 1.0.2 起的行为从正文清单构造目录。
+    func testMissingTocFallsBackToManifestChapters() throws {
         let url = library.path(for: .theMetamorphosisBrokenToc)
-        let parser = EPUBParser()
-        XCTAssertThrowsError(try parser.parse(documentAt: url), "") { error in
-            guard let error = error as? EPUBParserError else {
-                XCTFail("Error should be of type `EPUBParserError`")
-                return
-            }
-            switch error {
-            case .tableOfContentsMissing:
-                XCTAssertNotNil(error.errorDescription)
-                XCTAssertNotNil(error.failureReason)
-                XCTAssertNotNil(error.recoverySuggestion)
-            default:
-                XCTFail("Wrong error thrown: \(error)")
-            }
-        }
+        let document = try EPUBParser().parse(documentAt: url)
+
+        XCTAssertEqual(document.tableOfContents.id, "generated-toc")
+        XCTAssertFalse(document.tableOfContents.subTable?.isEmpty ?? true)
     }
 
     func testErrorContentWithBrokenPhilosophy() {

@@ -59,5 +59,35 @@ final class EPUBDocumentTests: XCTestCase {
         XCTAssertEqual(document.publisher, "PresssBooks.com")
         XCTAssertNotNil(document.cover)
     }
-    
+
+    /// 无旧版封面标识时，应识别 EPUB 3 属性列表中的封面图片。
+    func testCoverFallsBackToEPUB3CoverImageProperty() {
+        let url = library.path(for: .alicesAdventuresinWonderland)
+        guard let parsed = EPUBDocument(url: url) else {
+            XCTFail("Document should be parsed correctly.")
+            return
+        }
+
+        var metadata = parsed.metadata
+        metadata.coverId = nil
+        var manifest = parsed.manifest
+        let coverItem = EPUBManifestItem(
+            id: "epub3-cover",
+            path: "Images/cover.jpg",
+            mediaType: .unknown,
+            property: "nav cover-image"
+        )
+        manifest.items[coverItem.id] = coverItem
+        manifest.itemList.append(coverItem)
+        let document = EPUBDocument(
+            directory: parsed.directory,
+            contentDirectory: parsed.contentDirectory,
+            metadata: metadata,
+            manifest: manifest,
+            spine: parsed.spine,
+            tableOfContents: parsed.tableOfContents
+        )
+
+        XCTAssertEqual(document.cover, parsed.contentDirectory.appendingPathComponent(coverItem.path))
+    }
 }
