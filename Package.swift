@@ -6,9 +6,9 @@ let package = Package(
     name: "EPUBKit",
     
     platforms: [
-        .macOS(.v10_10),
-        .iOS(.v9),
-        .tvOS(.v9)
+        .macOS("10.14"),
+        .iOS("17.0"),
+        .tvOS("17.0")
     ],
     
     products: [
@@ -16,10 +16,10 @@ let package = Package(
     ],
     
     dependencies: [
-        // AEXML 4.7.x 提高了最低系统版本；保持 EPUBKit 当前平台兼容范围。
+        // 固定已验证版本，避免 AEXML 后续更新意外提高最低系统要求。
         .package(
             url: "https://github.com/tadija/AEXML",
-            .exact("4.6.0")
+            .exact("4.7.3")
         ),
         .package(
             url: "https://github.com/marmelroy/Zip",
