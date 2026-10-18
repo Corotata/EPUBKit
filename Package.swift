@@ -16,9 +16,10 @@ let package = Package(
     ],
     
     dependencies: [
+        // AEXML 4.7.x 提高了最低系统版本；保持 EPUBKit 当前平台兼容范围。
         .package(
             url: "https://github.com/tadija/AEXML",
-            from: "4.6.0"
+            .exact("4.6.0")
         ),
         .package(
             url: "https://github.com/marmelroy/Zip",
